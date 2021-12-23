@@ -63,6 +63,12 @@ void ImageOutputDev::drawImageMask(GfxState *state, Object *ref, Stream *str,
   char buf[4096];
   int size, n, i;
 
+  if (curPageNum != imgNum + 1) {
+      fprintf(stdout, "curpage %d, imgnum %d\n", curPageNum, imgNum);
+      error(errIO, -1, "Not a single file on a page");
+      exit(50);
+  }
+
   // dump raw file
   if (dumpRaw && !inlineImg) {
 
@@ -167,6 +173,12 @@ void ImageOutputDev::drawImage(GfxState *state, Object *ref, Stream *str,
   int x, y;
   char buf[4096];
   int size, n, i, j;
+
+  if (curPageNum != imgNum + 1) {
+    fprintf(stdout, "curpage %d, imgnum %d\n", curPageNum, imgNum);
+    error(errIO, -1, "Not a single file on a page");
+    exit(50);
+  }
 
   csMode = colorMap->getColorSpace()->getMode();
   if (csMode == csIndexed) {
