@@ -189,56 +189,56 @@ void ImageOutputDev::drawImage(GfxState *state, Object *ref, Stream *str,
   // dump raw file
   if (dumpRaw && !inlineImg) {
 
-    // open the image file
-    fileName = GString::format("{0:s}-{1:04d}.{2:s}",
-			       fileRoot, imgNum, getRawFileExtension(str));
-    ++imgNum;
-    if (!(f = openFile(fileName->getCString(), "wb"))) {
-      error(errIO, -1, "Couldn't open image file '{0:t}'", fileName);
-      delete fileName;
-      return;
-    }
+      // open the image file
+      fileName = GString::format("{0:s}-{1:04d}.{2:s}",
+          fileRoot, imgNum, getRawFileExtension(str));
+      ++imgNum;
+      if (!(f = openFile(fileName->getCString(), "wb"))) {
+          error(errIO, -1, "Couldn't open image file '{0:t}'", fileName);
+          delete fileName;
+          return;
+      }
 
-    // initialize stream
-    str = getRawStream(str);
-    str->reset();
+      // initialize stream
+      str = getRawStream(str);
+      str->reset();
 
-    // copy the stream
-    while ((n = str->getBlock(buf, sizeof(buf))) > 0) {
-      fwrite(buf, 1, n, f);
-    }
+      // copy the stream
+      while ((n = str->getBlock(buf, sizeof(buf))) > 0) {
+          fwrite(buf, 1, n, f);
+      }
 
-    str->close();
-    fclose(f);
+      str->close();
+      fclose(f);
 
-  // dump JPEG file
+      // dump JPEG file
   } else if (dumpJPEG && str->getKind() == strDCT &&
-	     (colorMap->getNumPixelComps() == 1 ||
-	      colorMap->getNumPixelComps() == 3) &&
-	     !inlineImg) {
+      (colorMap->getNumPixelComps() == 1 ||
+          colorMap->getNumPixelComps() == 3) &&
+      !inlineImg) {
 
-    // open the image file
-    fileName = GString::format("{0:s}-{1:04d}.jpg", fileRoot, imgNum);
-    ++imgNum;
-    if (!(f = openFile(fileName->getCString(), "wb"))) {
-      error(errIO, -1, "Couldn't open image file '{0:t}'", fileName);
-      delete fileName;
-      return;
-    }
+      // open the image file
+      fileName = GString::format("{0:s}-{1:04d}.jpg", fileRoot, imgNum);
+      ++imgNum;
+      if (!(f = openFile(fileName->getCString(), "wb"))) {
+          error(errIO, -1, "Couldn't open image file '{0:t}'", fileName);
+          delete fileName;
+          return;
+      }
 
-    // initialize stream
-    str = ((DCTStream *)str)->getRawStream();
-    str->reset();
+      // initialize stream
+      str = ((DCTStream *)str)->getRawStream();
+      str->reset();
 
-    // copy the stream
-    while ((n = str->getBlock(buf, sizeof(buf))) > 0) {
-      fwrite(buf, 1, n, f);
-    }
+      // copy the stream
+      while ((n = str->getBlock(buf, sizeof(buf))) > 0) {
+          fwrite(buf, 1, n, f);
+      }
 
-    str->close();
-    fclose(f);
+      str->close();
+      fclose(f);
 
-  // dump PBM file
+      // dump PBM file
   } else if (colorMap->getNumPixelComps() == 1 &&
 	     colorMap->getBits() == 1) {
 
@@ -431,6 +431,7 @@ void ImageOutputDev::writeImageInfo(GString *fileName,
   const char *mode;
   double hdpi, vdpi, x0, y0, x1, y1;
   int bpc;
+  int numpixelcomps;
 
   // this works for 0/90/180/270-degree rotations, along with
   // horizontal/vertical flips
@@ -452,14 +453,17 @@ void ImageOutputDev::writeImageInfo(GString *fileName,
     mode = GfxColorSpace::getColorSpaceModeName(
 			      colorMap->getColorSpace()->getMode());
     bpc = colorMap->getBits();
+    numpixelcomps = colorMap->getNumPixelComps();
   } else {
     mode = NULL;
     bpc = 1;
+    numpixelcomps = 1;
   }
 
-  printf("%s: page=%d width=%d height=%d hdpi=%.2f vdpi=%.2f %s%s bpc=%d\n",
-	 fileName->getCString(), curPageNum, width, height, hdpi, vdpi,
+  printf("%s: page=%d rotate=%d width=%d height=%d hdpi=%.2f vdpi=%.2f %s%s bpc=%d pcomp=%d\n",
+	 fileName->getCString(), curPageNum, state->getRotate(), width, height, hdpi, vdpi,
 	 mode ? "colorspace=" : "mask",
 	 mode ? mode : "",
-	 bpc);
+	 bpc,
+         numpixelcomps);
 }

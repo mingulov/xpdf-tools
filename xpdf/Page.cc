@@ -347,7 +347,7 @@ void Page::displaySlice(OutputDev *out, double hDPI, double vDPI,
 
   traceBegin(this, "begin page");
 
-  printf("page=%d, rotate %d\n", getNum(), getRotate());
+  //printf("page=%d, rotate %d\n", getNum(), getRotate());
 
   rotate += getRotate();
   if (rotate >= 360) {
