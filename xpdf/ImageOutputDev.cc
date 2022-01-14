@@ -160,6 +160,36 @@ void ImageOutputDev::drawImageMask(GfxState* state, Object* ref, Stream* str,
     delete fileName;
 }
 
+static int canImageBeSkipped(Stream* str, int width, int height, GfxImageColorMap* colorMap)
+{
+    int pixFirstGot = 0;
+    Guchar pixFirst[colorMap->getNumPixelComps()];
+    Guchar pix[colorMap->getNumPixelComps()];
+
+    ImageStream *imgStr = new ImageStream(str, width, colorMap->getNumPixelComps(), colorMap->getBits());
+    imgStr->reset();
+
+    while (imgStr->getPixel(pix)) {
+        if (!pixFirstGot) {
+            memcpy(pixFirst, pix, colorMap->getNumPixelComps());
+            pixFirstGot = 1;
+        }
+
+        if (memcmp(pixFirst, pix, colorMap->getNumPixelComps()) != 0) {
+            // not the same pixel, can be closed
+            imgStr->close();
+            delete imgStr;
+
+            return 0;
+        }
+    }
+
+    imgStr->close();
+    delete imgStr;
+
+    return 1;
+}
+
 void ImageOutputDev::drawImage(GfxState* state, Object* ref, Stream* str,
     int width, int height,
     GfxImageColorMap* colorMap,
@@ -177,6 +207,11 @@ void ImageOutputDev::drawImage(GfxState* state, Object* ref, Stream* str,
     int size, n, i, j;
 
     if (curPageNum != imgNum + 1) {
+        if (canImageBeSkipped(str, width, height, colorMap)) {
+            fprintf(stdout, "curpage %d, imgnum %d. Samecolor image, skip\n", curPageNum, imgNum);
+            return;
+        }
+
         fprintf(stdout, "curpage %d, imgnum %d\n", curPageNum, imgNum);
         error(errIO, -1, "Not a single file on a page");
         exit(50);
